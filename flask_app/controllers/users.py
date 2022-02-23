@@ -7,26 +7,12 @@ from flask_bcrypt import Bcrypt
 bcrypt = Bcrypt(app)
 
 @app.route('/')
-def index():
-    return render_template('index.html')
-
-@app.route('/register',methods=['POST'])
-def register():
-    if not User.validate_register(request.form):
-        return redirect('/')
-    data ={
-        "first_name": request.form['first_name'],
-        "last_name": request.form['last_name'],
-        "email": request.form['email'],
-        "password": bcrypt.generate_password_hash(request.form['password'])
-    }
-    id = User.save(data)
-    session['user_id'] = id
-    return redirect('/dashboard')
+def login():
+    return render_template('login.html')
 
 @app.route('/login',methods=['POST'])
-def login():
-    user = User.get_by_email(request.form)
+def user_login():
+    user = User.get_users_by_email(request.form)
     if not user:
         flash("Invalid Email","login")
         return redirect('/')
@@ -36,6 +22,24 @@ def login():
     session['user_id'] = user.id
     return redirect('/dashboard')
 
+@app.route('/registration')
+def registration():
+    return render_template('registration.html')
+
+@app.route('/register',methods=['POST'])
+def register():
+    if not User.validate_user(request.form):
+        return redirect('/registration')
+    data ={
+        "first_name": request.form['first_name'],
+        "last_name": request.form['last_name'],
+        "email": request.form['email'],
+        "password": bcrypt.generate_password_hash(request.form['password'])
+    }
+    id = User.save_user(data)
+    session['user_id'] = id
+    return redirect('/dashboard')
+
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session:
@@ -43,10 +47,12 @@ def dashboard():
     data ={
         'id': session['user_id']
     }
-    user = User.get_by_id(data)
-    messages = Message.get_user_messages(data)
-    users = User.get_all()
-    return render_template("user_information.html", user = user, users = users, messages = messages)
+    context = {
+        'user' : User.get_users_by_id(data),
+        'messages' : Message.get_user_messages(data),
+        'users' : User.get_all_users()
+    }
+    return render_template("user_information.html", **context)
 
 @app.route('/logout')
 def logout():

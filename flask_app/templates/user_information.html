@@ -29,12 +29,19 @@
         </div>
         <div class="card bg-dark col-5 p-4">
             <h1 class="text-warning">Send Messages</h1>
-            {% for u in users %}
-                {% if u.id != session.user_id %}
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                        {% for message in messages %}
+                            <p class='alert-warning text-center'><em>{{ message }}</em></p>
+                        {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% for user in users %}
+                {% if user.id != session.user_id %}
                 <form class=" p-2"action="/post_message" method="post">
                     <input type="hidden" name="sender_id" value={{session.user_id}}>
-                    <input type="hidden" name="receiver_id" value={{u.id}}>
-                    <label class="text-light" for="receiver_id">Message to {{u.first_name}}:</label>
+                    <input type="hidden" name="receiver_id" value={{user.id}}>
+                    <label class="text-light" for="receiver_id">Message to {{user.first_name}} {{ user.last_name }}</label>:</label>
                     <textarea class="form-control mb-2" name="content" id="" cols="30" rows="3"></textarea>
                     <input type="submit" value="Send Message" class="btn btn-warning float-right">
                 </form>
